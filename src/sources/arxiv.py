@@ -23,20 +23,20 @@ class ArXivSource(DataSource):
     def _sync_search(self, query: str, max_results: int) -> list[Paper]:
         search  = arxiv.Search(query=query, max_results=max_results, sort_by=arxiv.SortCriterion.Relevance)
         results = list(self._client.results(search))
-        return [self._map(r) for r in results]
+        return [self._map(result) for result in results]
 
-    def _map(self, r: arxiv.Result) -> Paper:
-        arxiv_id = r.entry_id.split("/abs/")[-1]
+    def _map(self, result: arxiv.Result) -> Paper:
+        arxiv_id = result.entry_id.split("/abs/")[-1]
         return Paper(
-            title = r.title,
-            abstract = r.summary,
-            authors = [str(a) for a in r.authors],
-            year = r.published.year if r.published else None,
-            arxiv_id = arxiv_id,
-            doi = r.doi,
-            url = r.entry_id,
-            pdf_url = str(r.pdf_url) if r.pdf_url else None,
-            venue = str(r.journal_ref) if r.journal_ref else None,
-            keywords = [str(c) for c in r.categories],
-            source = self.name,
+            title=result.title,
+            abstract=result.summary,
+            authors=[str(author) for author in result.authors],
+            year=result.published.year if result.published else None,
+            arxiv_id=arxiv_id,
+            doi=result.doi,
+            url=result.entry_id,
+            pdf_url=str(result.pdf_url) if result.pdf_url else None,
+            venue=str(result.journal_ref) if result.journal_ref else None,
+            keywords=[str(category) for category in result.categories],
+            source=self.name,
         )

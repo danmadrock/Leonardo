@@ -2,9 +2,9 @@ from pydantic import BaseModel
 
 
 class PaperRef(BaseModel):
-    title:    str
-    url:      str
-    doi:      str | None = None
+    title: str
+    url: str
+    doi: str | None = None
     arxiv_id: str | None = None
 
 
