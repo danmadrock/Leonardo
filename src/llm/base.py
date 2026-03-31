@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, cast
+from typing import Any, Literal, TypedDict, cast
 
 from pydantic import BaseModel
 
@@ -19,7 +19,9 @@ try:
 except ImportError:  # pragma: no cover - handled in runtime environments without litellm
     litellm = None  # type: ignore[assignment]
 
-Message = dict[str, str]
+class Message(TypedDict):
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str
 
 
 class BaseLLM(ABC):
@@ -100,3 +102,13 @@ class LiteLLMClient(BaseLLM):
         if content is None:
             raise ValueError("LLM response does not include message content")
         return str(content)
+
+
+_client: LiteLLMClient | None = None
+
+
+def get_llm() -> LiteLLMClient:
+    global _client
+    if _client is None:
+        _client = LiteLLMClient()
+    return _client
