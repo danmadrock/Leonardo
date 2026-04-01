@@ -10,7 +10,6 @@ from src.db.base import Base
 
 class PaperRecord(Base):
     __tablename__ = "papers"
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(String(1000), nullable=False)
     abstract: Mapped[str] = mapped_column(Text, default="", nullable=False)

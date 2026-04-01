@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from typing import Literal, TypedDict
-
 from src.agents.models import Finding, Report
 from src.sources.models import Paper
 

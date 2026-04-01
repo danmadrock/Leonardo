@@ -29,7 +29,6 @@ class TaskStage(str, Enum):
 
 class ResearchTask(Base):
     __tablename__ = "tasks"
-
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     query: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[TaskStatus] = mapped_column(SQLEnum(TaskStatus), default=TaskStatus.pending)

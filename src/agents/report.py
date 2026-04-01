@@ -29,10 +29,8 @@ class ReportAgent(BaseAgent):
                 ),
             },
         ]
-
         report_body = await self.llm.complete(messages, response_model=ReportBody)
         assert isinstance(report_body, ReportBody)
-
         markdown = self._render_markdown(
             query=state["query"],
             executive_summary=report_body.executive_summary,
@@ -41,7 +39,6 @@ class ReportAgent(BaseAgent):
             identified_gaps=report_body.identified_gaps,
             sources=sources,
         )
-
         report = Report(
             executive_summary=report_body.executive_summary,
             key_findings=findings,
@@ -72,16 +69,7 @@ class ReportAgent(BaseAgent):
             return f"arXiv:{source.arxiv_id}"
         return source.url
 
-    def _render_markdown(
-        self,
-        *,
-        query: str,
-        executive_summary: str,
-        findings: list[Finding],
-        methodology_overview: str,
-        identified_gaps: list[str],
-        sources: list[PaperRef],
-    ) -> str:
+    def _render_markdown(self, *, query: str, executive_summary: str, findings: list[Finding], methodology_overview: str, identified_gaps: list[str], sources: list[PaperRef]) -> str:
         lines = [
             f"# Research Report: {query}",
             "",

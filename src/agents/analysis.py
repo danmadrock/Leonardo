@@ -19,20 +19,17 @@ class AnalysisAgent(BaseAgent):
     async def run(self, state: ResearchState) -> dict:
         papers = state["papers"]
         findings: list[Finding] = []
-
         for i in range(0, len(papers), settings.ANALYSIS_BATCH_SIZE):
             batch = papers[i : i + settings.ANALYSIS_BATCH_SIZE]
             batch_findings = await self._analyze_batch(state["query"], batch)
             for finding in batch_findings:
                 if finding.relevance >= settings.MIN_FINDING_RELEVANCE:
                     findings.append(finding)
-
         return {"findings": findings}
 
     async def _analyze_batch(self, query: str, papers: list[Paper]) -> list[Finding]:
         tasks = [self._analyze_single(query, paper) for paper in papers]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-
         findings: list[Finding] = []
         for result in results:
             if isinstance(result, BaseException) or result is None:
@@ -54,10 +51,8 @@ class AnalysisAgent(BaseAgent):
                 ),
             },
         ]
-
         output = await self.llm.complete(messages, response_model=Finding)
         assert isinstance(output, Finding)
-
         if not output.source_paper.title:
             output.source_paper = PaperRef(
                 title=paper.title,
@@ -65,5 +60,4 @@ class AnalysisAgent(BaseAgent):
                 doi=paper.doi,
                 arxiv_id=paper.arxiv_id,
             )
-
         return output
