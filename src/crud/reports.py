@@ -43,3 +43,7 @@ async def update_report(
     await db.commit()
     await db.refresh(report)
     return report
+
+async def delete_report(db: AsyncSession, report: ReportRecord) -> None:
+    await db.delete(report)
+    await db.commit()

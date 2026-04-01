@@ -5,8 +5,8 @@ from src.sources.models import PaperRef
 class PlannerOutput(BaseModel):
     subtasks: list[str] = Field(
         description="List of 3-5 independent search angles for the research query.",
-        min_length=2,
-        max_length=6,
+        min_length=3,
+        max_length=5,
     )
     reasoning: str = Field(description="Brief explanation of the decomposition strategy.")
 
@@ -19,6 +19,10 @@ class Finding(BaseModel):
     source_paper: PaperRef
 
 
+class AnalysisBatchOutput(BaseModel):
+    findings: list[Finding] = Field(default_factory=list)
+
+
 class Report(BaseModel):
     executive_summary: str
     key_findings: list[Finding]
@@ -26,3 +30,9 @@ class Report(BaseModel):
     identified_gaps: list[str]
     sources: list[PaperRef]
     raw_markdown: str
+
+
+class ReportBody(BaseModel):
+    executive_summary: str
+    methodology_overview: str
+    identified_gaps: list[str] = Field(default_factory=list)

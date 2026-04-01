@@ -37,3 +37,7 @@ async def update_task(
     await db.commit()
     await db.refresh(task)
     return task
+
+async def delete_task(db: AsyncSession, task: ResearchTask) -> None:
+    await db.delete(task)
+    await db.commit()

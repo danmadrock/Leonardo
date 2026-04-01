@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.schemas import PaperCreate, PaperUpdate
@@ -23,6 +23,29 @@ async def create_paper(db: AsyncSession, payload: PaperCreate) -> PaperRecord:
     await db.commit()
     await db.refresh(paper)
     return paper
+
+
+async def get_paper_by_identity(db: AsyncSession, *, doi: str | None, arxiv_id: str | None, title: str) -> PaperRecord | None:
+    clauses = [func.lower(PaperRecord.title) == title.strip().lower()]
+    if doi:
+        clauses.append(func.lower(PaperRecord.doi) == doi.strip().lower())
+    if arxiv_id:
+        clauses.append(func.lower(PaperRecord.arxiv_id) == arxiv_id.strip().lower())
+
+    result = await db.execute(select(PaperRecord).where(or_(*clauses)).limit(1))
+    return result.scalar_one_or_none()
+
+
+async def create_paper_if_missing(db: AsyncSession, payload: PaperCreate) -> PaperRecord:
+    existing = await get_paper_by_identity(
+        db,
+        doi=payload.doi,
+        arxiv_id=payload.arxiv_id,
+        title=payload.title,
+    )
+    if existing is not None:
+        return existing
+    return await create_paper(db, payload)
 
 
 async def list_papers(db: AsyncSession, limit: int = 20, offset: int = 0) -> list[PaperRecord]:
