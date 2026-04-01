@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 from src.api.routers import health_router, papers_router, reports_router, tasks_router
 from src.core.logging import configure_logging
 

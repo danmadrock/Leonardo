@@ -15,7 +15,6 @@ async def mark_task_running(db: AsyncSession, task_id: str) -> None:
     task = await get_task(db, task_id)
     if task is None:
         return
-
     await update_task(
         db,
         task,
@@ -32,7 +31,6 @@ async def mark_task_failed(db: AsyncSession, task_id: str, error: str) -> None:
     task = await get_task(db, task_id)
     if task is None:
         return
-
     await update_task(
         db,
         task,
@@ -49,7 +47,6 @@ async def persist_final_state(db: AsyncSession, state: ResearchState) -> None:
     task = await get_task(db, state["task_id"])
     if task is None:
         return
-
     await update_task(
         db,
         task,
@@ -65,7 +62,6 @@ async def persist_final_state(db: AsyncSession, state: ResearchState) -> None:
             completed_at=datetime.utcnow(),
         ),
     )
-
     if state["report"] is not None:
         await upsert_report(
             db,

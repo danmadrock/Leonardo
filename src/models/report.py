@@ -10,7 +10,6 @@ from src.db.base import Base
 
 class ReportRecord(Base):
     __tablename__ = "reports"
-
     task_id: Mapped[str] = mapped_column(String(36), ForeignKey("tasks.id"), primary_key=True)
     markdown: Mapped[str] = mapped_column(Text, nullable=False)
     structured_report_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)

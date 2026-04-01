@@ -26,22 +26,12 @@ class Message(TypedDict):
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def complete(
-        self,
-        messages: list[Message],
-        response_model: type[BaseModel] | None = None,
-    ) -> str | BaseModel:
+    async def complete(self, messages: list[Message], response_model: type[BaseModel] | None = None) -> str | BaseModel:
         """Run a chat completion request."""
 
 
 class LiteLLMClient(BaseLLM):
-    def __init__(
-        self,
-        model: str | None = None,
-        max_retries: int = 3,
-        retry_base_delay: float = 0.25,
-        temperature: float = 0.0,
-    ) -> None:
+    def __init__(self, model: str | None = None, max_retries: int = 3, retry_base_delay: float = 0.25, temperature: float = 0.0) -> None:
         self.model = model or settings.LLM_MODEL
         self.max_retries = max_retries
         self.retry_base_delay = retry_base_delay
@@ -52,19 +42,13 @@ class LiteLLMClient(BaseLLM):
             raise RuntimeError("litellm is not installed")
         return await litellm.acompletion(**kwargs)
 
-    async def complete(
-        self,
-        messages: list[Message],
-        response_model: type[BaseModel] | None = None,
-    ) -> str | BaseModel:
+    async def complete(self, messages: list[Message], response_model: type[BaseModel] | None = None) -> str | BaseModel:
         last_error: Exception | None = None
-
         for attempt in range(1, self.max_retries + 1):
             try:
                 if response_model is not None:
                     if instructor is None:
                         raise RuntimeError("instructor is required for structured outputs")
-
                     instructor_module = instructor
                     from_litellm = cast(Any, instructor_module.from_litellm)
                     client = from_litellm(self._acompletion)
@@ -74,7 +58,6 @@ class LiteLLMClient(BaseLLM):
                         temperature=self.temperature,
                         response_model=response_model,
                     )
-
                 response = await self._acompletion(
                     model=self.model,
                     messages=messages,
@@ -86,7 +69,6 @@ class LiteLLMClient(BaseLLM):
                 if attempt >= self.max_retries:
                     break
                 await asyncio.sleep(self.retry_base_delay * (2 ** (attempt - 1)))
-
         raise LLMError(
             f"LLM completion failed after {self.max_retries} retries for model {self.model}"
         ) from last_error
@@ -95,7 +77,6 @@ class LiteLLMClient(BaseLLM):
     def _extract_text(response: Any) -> str:
         if isinstance(response, dict):
             return str(response["choices"][0]["message"]["content"])
-
         choice = response.choices[0]
         message = getattr(choice, "message", None)
         content = getattr(message, "content", None)

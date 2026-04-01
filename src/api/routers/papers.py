@@ -15,10 +15,7 @@ def _to_read_model(paper: object) -> PaperRead:
 
 
 @router.post("", response_model=PaperRead, status_code=status.HTTP_201_CREATED)
-async def create_paper_endpoint(
-    payload: PaperCreate,
-    db: AsyncSession = Depends(get_db),  # noqa: B008
-) -> PaperRead:
+async def create_paper_endpoint(payload: PaperCreate, db: AsyncSession = Depends(get_db)) -> PaperRead:
     paper = await create_paper(db, payload)
     return _to_read_model(paper)
 
