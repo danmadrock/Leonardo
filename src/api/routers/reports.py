@@ -34,7 +34,9 @@ async def get_report_endpoint(
 ) -> ReportRecordRead:
     report = await get_report(db, task_id)
     if report is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Report not found"
+        )
     return ReportRecordRead.model_validate(report)
 
 
@@ -46,7 +48,9 @@ async def update_report_endpoint(
 ) -> ReportRecordRead:
     report = await get_report(db, task_id)
     if report is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Report not found"
+        )
 
     updated = await update_report(db, report, payload)
     return ReportRecordRead.model_validate(updated)

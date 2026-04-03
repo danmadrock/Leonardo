@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, ClassVar
 import time
+from typing import Any, ClassVar
 
 import httpx
-from tenacity import AsyncRetrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from src.core.config import settings
 from src.sources.base import DataSource
@@ -28,7 +33,7 @@ class SemanticScholarSource(DataSource):
         self._min_interval = 1.0
         self._rate_lock = asyncio.Lock()
 
-    async def _rate_limit(self):
+    async def _rate_limit(self) -> None:
         async with self._rate_lock:
             now = time.time()
             delta = now - self._last_request
@@ -38,7 +43,9 @@ class SemanticScholarSource(DataSource):
 
     async def search(self, query: str, max_results: int = 10) -> list[Paper]:
         try:
-            payload = await self._search_with_retry(query=query, max_results=max_results)
+            payload = await self._search_with_retry(
+                query=query, max_results=max_results
+            )
         except Exception:
             logger.exception("Semantic Scholar search failed", extra={"query": query})
             return []
@@ -84,7 +91,9 @@ class SemanticScholarSource(DataSource):
                 retry_after = int(response.headers.get("Retry-After", "5"))
                 logger.warning(f"Rate limited. Sleeping {retry_after}s")
                 await asyncio.sleep(retry_after)
-                raise httpx.HTTPStatusError("429 retry", request=response.request, response=response)
+                raise httpx.HTTPStatusError(
+                    "429 retry", request=response.request, response=response
+                )
 
         response.raise_for_status()
         return response.json()
@@ -96,7 +105,9 @@ class SemanticScholarSource(DataSource):
             title=record.get("title") or "",
             abstract=record.get("abstract") or "",
             authors=[
-                author.get("name", "") for author in record.get("authors", []) if author.get("name")
+                author.get("name", "")
+                for author in record.get("authors", [])
+                if author.get("name")
             ],
             year=record.get("year"),
             doi=external_ids.get("DOI"),
@@ -108,6 +119,6 @@ class SemanticScholarSource(DataSource):
             source=self.name,
             metadata={"paper_id": record.get("paperId")},
         )
-    
-    async def close(self):
+
+    async def close(self) -> None:
         await self._client.aclose()

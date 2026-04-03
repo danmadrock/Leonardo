@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from src.models.task import TaskStage, TaskStatus
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class ResearchTaskCreate(BaseModel):
@@ -12,6 +15,8 @@ class ResearchTaskCreate(BaseModel):
     status: TaskStatus = TaskStatus.pending
     stage: TaskStage = TaskStage.planning
     selected_sources: list[str] = Field(default_factory=list)
+    idempotency_key: str | None = None
+    request_fingerprint: str | None = None
     max_papers: int = Field(default=50, ge=1)
     max_iterations: int = Field(default=3, ge=1)
 
@@ -21,6 +26,8 @@ class ResearchTaskUpdate(BaseModel):
     stage: TaskStage | None = None
     error: str | None = None
     selected_sources: list[str] | None = None
+    idempotency_key: str | None = None
+    request_fingerprint: str | None = None
     max_papers: int | None = Field(default=None, ge=1)
     max_iterations: int | None = Field(default=None, ge=1)
     iterations_used: int | None = Field(default=None, ge=0)
@@ -40,6 +47,8 @@ class ResearchTaskRead(BaseModel):
     stage: TaskStage
     error: str | None
     selected_sources: list[str]
+    idempotency_key: str | None
+    request_fingerprint: str | None
     max_papers: int
     max_iterations: int
     iterations_used: int

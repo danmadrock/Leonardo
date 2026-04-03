@@ -6,7 +6,6 @@ Create Date: 2026-03-27
 """
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -17,7 +16,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    task_status = sa.Enum("pending", "running", "completed", "failed", name="taskstatus")
+    task_status = sa.Enum(
+        "pending", "running", "completed", "failed", name="taskstatus"
+    )
     task_status.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
@@ -50,7 +51,9 @@ def upgrade() -> None:
 
     op.create_table(
         "reports",
-        sa.Column("task_id", sa.String(length=36), sa.ForeignKey("tasks.id"), primary_key=True),
+        sa.Column(
+            "task_id", sa.String(length=36), sa.ForeignKey("tasks.id"), primary_key=True
+        ),
         sa.Column("markdown", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
     )

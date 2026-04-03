@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
+
 from src.sources.models import Paper
 
 

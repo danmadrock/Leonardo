@@ -1,18 +1,23 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from pydantic import HttpUrl, TypeAdapter, ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agents.base import BaseAgent
 from src.api.schemas import PaperCreate
 from src.core.config import settings
 from src.crud.papers import create_paper_if_missing
-from src.graph.state import ResearchState
-from src.sources.models import Paper
 from src.sources.registry import get_source
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from src.graph.state import ResearchState
+    from src.sources.models import Paper
 
 _HTTP_URL_ADAPTER = TypeAdapter(HttpUrl)
 
@@ -32,9 +37,20 @@ def _coerce_url(raw_url: str) -> HttpUrl | None:
 
 
 class SearchAgent(BaseAgent):
-    def __init__(self, llm, db_session_factory: Callable[[], AsyncSession] | None = None) -> None:
+    def __init__(
+        self, llm, db_session_factory: Callable[[], AsyncSession] | None = None
+    ) -> None:
         super().__init__(llm)
         self.db_session_factory = db_session_factory
+
+    async def _safe_search(
+        self, source_name: str, query: str, max_results: int
+    ) -> list[Paper]:
+        source = get_source(source_name)
+        return await asyncio.wait_for(
+            source.search(query, max_results=max_results),
+            timeout=settings.SOURCE_TIMEOUT_SECONDS,
+        )
 
     async def run(self, state: ResearchState) -> dict:
         enabled_sources = state.get("requested_sources") or settings.ENABLED_SOURCES
@@ -45,8 +61,7 @@ class SearchAgent(BaseAgent):
         jobs: list[Awaitable[list[Paper]]] = []
         for subtask in state["subtasks"]:
             for source_name in enabled_sources:
-                source = get_source(source_name)
-                jobs.append(source.search(subtask, max_results=per_subtask_limit))
+                jobs.append(self._safe_search(source_name, subtask, per_subtask_limit))
         batches = await asyncio.gather(*jobs, return_exceptions=True)
         seen: set[tuple[str, str, str]] = set()
         deduped: list[Paper] = []

@@ -25,7 +25,9 @@ async def create_paper(db: AsyncSession, payload: PaperCreate) -> PaperRecord:
     return paper
 
 
-async def get_paper_by_identity(db: AsyncSession, *, doi: str | None, arxiv_id: str | None, title: str) -> PaperRecord | None:
+async def get_paper_by_identity(
+    db: AsyncSession, *, doi: str | None, arxiv_id: str | None, title: str
+) -> PaperRecord | None:
     clauses = [func.lower(PaperRecord.title) == title.strip().lower()]
     if doi:
         clauses.append(func.lower(PaperRecord.doi) == doi.strip().lower())
@@ -36,7 +38,9 @@ async def get_paper_by_identity(db: AsyncSession, *, doi: str | None, arxiv_id: 
     return result.scalar_one_or_none()
 
 
-async def create_paper_if_missing(db: AsyncSession, payload: PaperCreate) -> PaperRecord:
+async def create_paper_if_missing(
+    db: AsyncSession, payload: PaperCreate
+) -> PaperRecord:
     existing = await get_paper_by_identity(
         db,
         doi=payload.doi,
@@ -48,7 +52,9 @@ async def create_paper_if_missing(db: AsyncSession, payload: PaperCreate) -> Pap
     return await create_paper(db, payload)
 
 
-async def list_papers(db: AsyncSession, limit: int = 20, offset: int = 0) -> list[PaperRecord]:
+async def list_papers(
+    db: AsyncSession, limit: int = 20, offset: int = 0
+) -> list[PaperRecord]:
     result = await db.execute(
         select(PaperRecord).limit(limit).offset(offset).order_by(PaperRecord.id.desc())
     )
@@ -59,7 +65,9 @@ async def get_paper(db: AsyncSession, paper_id: int) -> PaperRecord | None:
     return await db.get(PaperRecord, paper_id)
 
 
-async def update_paper(db: AsyncSession, paper: PaperRecord, payload: PaperUpdate) -> PaperRecord:
+async def update_paper(
+    db: AsyncSession, paper: PaperRecord, payload: PaperUpdate
+) -> PaperRecord:
     for key, value in payload.model_dump(exclude_unset=True).items():
         if key == "metadata":
             paper.metadata_json = value

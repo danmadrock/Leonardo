@@ -34,7 +34,9 @@ async def get_task_endpoint(
 ) -> ResearchTaskRead:
     task = await get_task(db, task_id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
     return ResearchTaskRead.model_validate(task)
 
 
@@ -46,7 +48,9 @@ async def update_task_endpoint(
 ) -> ResearchTaskRead:
     task = await get_task(db, task_id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
 
     updated = await update_task(db, task, payload)
     return ResearchTaskRead.model_validate(updated)

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+
 from src.sources.models import PaperRef
 
 
@@ -8,14 +9,18 @@ class PlannerOutput(BaseModel):
         min_length=3,
         max_length=5,
     )
-    reasoning: str = Field(description="Brief explanation of the decomposition strategy.")
+    reasoning: str = Field(
+        description="Brief explanation of the decomposition strategy."
+    )
 
 
 class Finding(BaseModel):
     claim: str = Field(description="The core scientific claim or contribution.")
     methodology: str = Field(description="How the result was obtained.")
     limitations: str = Field(description="Acknowledged limitations or scope.")
-    relevance: float = Field(ge=0.0, le=1.0, description="Relevance to the original query.")
+    relevance: float = Field(
+        ge=0.0, le=1.0, description="Relevance to the original query."
+    )
     source_paper: PaperRef
 
 

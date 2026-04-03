@@ -6,7 +6,6 @@ Create Date: 2026-03-31
 """
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -17,26 +16,100 @@ depends_on = None
 
 
 def upgrade() -> None:
-    task_stage = sa.Enum("planning", "search", "analysis", "report", "done", "error", name="taskstage")
+    task_stage = sa.Enum(
+        "planning", "search", "analysis", "report", "done", "error", name="taskstage"
+    )
     task_stage.create(op.get_bind(), checkfirst=True)
 
-    op.add_column("tasks", sa.Column("stage", task_stage, nullable=False, server_default="planning"))
-    op.add_column("tasks", sa.Column("selected_sources", sa.JSON(), nullable=False, server_default=sa.text("'[]'::json")))
-    op.add_column("tasks", sa.Column("max_papers", sa.Integer(), nullable=False, server_default="50"))
-    op.add_column("tasks", sa.Column("max_iterations", sa.Integer(), nullable=False, server_default="3"))
-    op.add_column("tasks", sa.Column("iterations_used", sa.Integer(), nullable=False, server_default="0"))
+    op.add_column(
+        "tasks",
+        sa.Column("stage", task_stage, nullable=False, server_default="planning"),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column(
+            "selected_sources",
+            sa.JSON(),
+            nullable=False,
+            server_default=sa.text("'[]'::json"),
+        ),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column("max_papers", sa.Integer(), nullable=False, server_default="50"),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column("max_iterations", sa.Integer(), nullable=False, server_default="3"),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column("iterations_used", sa.Integer(), nullable=False, server_default="0"),
+    )
 
-    op.add_column("tasks", sa.Column("progress_subtasks_total", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("tasks", sa.Column("progress_subtasks_completed", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("tasks", sa.Column("progress_papers_collected", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("tasks", sa.Column("progress_findings_generated", sa.Integer(), nullable=False, server_default="0"))
+    op.add_column(
+        "tasks",
+        sa.Column(
+            "progress_subtasks_total", sa.Integer(), nullable=False, server_default="0"
+        ),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column(
+            "progress_subtasks_completed",
+            sa.Integer(),
+            nullable=False,
+            server_default="0",
+        ),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column(
+            "progress_papers_collected",
+            sa.Integer(),
+            nullable=False,
+            server_default="0",
+        ),
+    )
+    op.add_column(
+        "tasks",
+        sa.Column(
+            "progress_findings_generated",
+            sa.Integer(),
+            nullable=False,
+            server_default="0",
+        ),
+    )
 
-    op.add_column("tasks", sa.Column("graph_state_snapshot_ref", sa.String(length=512), nullable=True))
-    op.add_column("tasks", sa.Column("started_at", sa.DateTime(timezone=True), nullable=True))
-    op.add_column("tasks", sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True))
+    op.add_column(
+        "tasks",
+        sa.Column("graph_state_snapshot_ref", sa.String(length=512), nullable=True),
+    )
+    op.add_column(
+        "tasks", sa.Column("started_at", sa.DateTime(timezone=True), nullable=True)
+    )
+    op.add_column(
+        "tasks", sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True)
+    )
 
-    op.add_column("reports", sa.Column("structured_report_json", sa.JSON(), nullable=False, server_default=sa.text("'{}'::json")))
-    op.add_column("reports", sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()))
+    op.add_column(
+        "reports",
+        sa.Column(
+            "structured_report_json",
+            sa.JSON(),
+            nullable=False,
+            server_default=sa.text("'{}'::json"),
+        ),
+    )
+    op.add_column(
+        "reports",
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+    )
 
     op.alter_column("tasks", "stage", server_default=None)
     op.alter_column("tasks", "selected_sources", server_default=None)

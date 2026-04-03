@@ -2,22 +2,28 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Literal, TypedDict, cast
-
-from pydantic import BaseModel
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from src.core.config import settings
 from src.core.exceptions import LLMError
 
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+
 try:
     import instructor
-except ImportError:  # pragma: no cover - handled in runtime environments without instructor
+except (
+    ImportError
+):  # pragma: no cover - handled in runtime environments without instructor
     instructor = None  # type: ignore[assignment]
 
 try:
     import litellm
-except ImportError:  # pragma: no cover - handled in runtime environments without litellm
+except (
+    ImportError
+):  # pragma: no cover - handled in runtime environments without litellm
     litellm = None  # type: ignore[assignment]
+
 
 class Message(TypedDict):
     role: Literal["system", "user", "assistant", "tool"]
@@ -26,15 +32,23 @@ class Message(TypedDict):
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def complete(self, messages: list[Message], response_model: type[BaseModel] | None = None) -> str | BaseModel:
+    async def complete(
+        self, messages: list[Message], response_model: type[BaseModel] | None = None
+    ) -> str | BaseModel:
         """Run a chat completion request."""
 
 
 class LiteLLMClient(BaseLLM):
-    def __init__(self, model: str | None = None, max_retries: int = 3, retry_base_delay: float = 0.25, temperature: float = 0.0) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        max_retries: int = 3,
+        retry_base_delay: float = 0.25,
+        temperature: float = 0.0,
+    ) -> None:
         self.model = model or settings.LLM_MODEL
-        self.max_retries = max_retries
-        self.retry_base_delay = retry_base_delay
+        self.max_retries = max_retries or settings.LLM_MAX_RETRIES
+        self.retry_base_delay = retry_base_delay or settings.LLM_RETRY_BASE_DELAY
         self.temperature = temperature
 
     async def _acompletion(self, **kwargs: Any) -> Any:
@@ -42,33 +56,47 @@ class LiteLLMClient(BaseLLM):
             raise RuntimeError("litellm is not installed")
         return await litellm.acompletion(**kwargs)
 
-    async def complete(self, messages: list[Message], response_model: type[BaseModel] | None = None) -> str | BaseModel:
+    async def complete(
+        self, messages: list[Message], response_model: type[BaseModel] | None = None
+    ) -> str | BaseModel:
         last_error: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
                 if response_model is not None:
                     if instructor is None:
-                        raise RuntimeError("instructor is required for structured outputs")
+                        raise RuntimeError(
+                            "instructor is required for structured outputs"
+                        )
                     instructor_module = instructor
-                    from_litellm = cast(Any, instructor_module.from_litellm)
+                    from_litellm = cast("Any", instructor_module.from_litellm)
                     client = from_litellm(self._acompletion)
-                    return await client.chat.completions.create(
+                    return await asyncio.wait_for(
+                        client.chat.completions.create(
+                            model=self.model,
+                            messages=messages,
+                            temperature=self.temperature,
+                            response_model=response_model,
+                        ),
+                        timeout=settings.LLM_TIMEOUT_SECONDS,
+                    )
+                response = await asyncio.wait_for(
+                    self._acompletion(
                         model=self.model,
                         messages=messages,
                         temperature=self.temperature,
-                        response_model=response_model,
-                    )
-                response = await self._acompletion(
-                    model=self.model,
-                    messages=messages,
-                    temperature=self.temperature,
+                    ),
+                    timeout=settings.LLM_TIMEOUT_SECONDS,
                 )
                 return self._extract_text(response)
-            except Exception as exc:  # noqa: BLE001 - normalize all provider errors to LLMError
+            except Exception as exc:  # noqa: BLE001
                 last_error = exc
                 if attempt >= self.max_retries:
                     break
-                await asyncio.sleep(self.retry_base_delay * (2 ** (attempt - 1)))
+                delay = self.retry_base_delay * (2 ** (attempt - 1))
+                message = str(exc).lower()
+                if "rate" in message and "limit" in message:
+                    delay = max(delay, 2.0)
+                await asyncio.sleep(delay)
         raise LLMError(
             f"LLM completion failed after {self.max_retries} retries for model {self.model}"
         ) from last_error

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from src.agents.base import BaseAgent
 from src.agents.models import Finding, Report, ReportBody
-from src.graph.state import ResearchState
-from src.llm.base import Message
-from src.sources.models import PaperRef
+
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
+    from src.llm.base import Message
+    from src.sources.models import PaperRef
 
 
 class ReportAgent(BaseAgent):
@@ -69,7 +73,16 @@ class ReportAgent(BaseAgent):
             return f"arXiv:{source.arxiv_id}"
         return source.url
 
-    def _render_markdown(self, *, query: str, executive_summary: str, findings: list[Finding], methodology_overview: str, identified_gaps: list[str], sources: list[PaperRef]) -> str:
+    def _render_markdown(
+        self,
+        *,
+        query: str,
+        executive_summary: str,
+        findings: list[Finding],
+        methodology_overview: str,
+        identified_gaps: list[str],
+        sources: list[PaperRef],
+    ) -> str:
         lines = [
             f"# Research Report: {query}",
             "",
@@ -92,7 +105,9 @@ class ReportAgent(BaseAgent):
                 ]
             )
 
-        lines.extend(["## Methodology Overview", methodology_overview, "", "## Research Gaps"])
+        lines.extend(
+            ["## Methodology Overview", methodology_overview, "", "## Research Gaps"]
+        )
         if identified_gaps:
             lines.extend([f"- {gap}" for gap in identified_gaps])
         else:

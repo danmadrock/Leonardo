@@ -16,13 +16,19 @@ class StructuredAnswer(BaseModel):
 
 
 @pytest.mark.asyncio
-async def test_complete_passes_messages_to_litellm(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_complete_passes_messages_to_litellm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     messages = [
         {"role": "system", "content": "You are concise."},
         {"role": "user", "content": "Say hello"},
     ]
-    mock_completion = AsyncMock(return_value={"choices": [{"message": {"content": "hello"}}]})
-    monkeypatch.setattr("src.llm.base.litellm", SimpleNamespace(acompletion=mock_completion))
+    mock_completion = AsyncMock(
+        return_value={"choices": [{"message": {"content": "hello"}}]}
+    )
+    monkeypatch.setattr(
+        "src.llm.base.litellm", SimpleNamespace(acompletion=mock_completion)
+    )
 
     llm = LiteLLMClient(model="gpt-test")
     result = await llm.complete(messages)
@@ -47,8 +53,13 @@ async def test_complete_with_response_model_returns_pydantic_object(
         chat=SimpleNamespace(completions=SimpleNamespace(create=create_mock))
     )
 
-    monkeypatch.setattr("src.llm.base.instructor", SimpleNamespace(from_litellm=lambda acompletion: fake_client))
-    monkeypatch.setattr("src.llm.base.litellm", SimpleNamespace(acompletion=AsyncMock()))
+    monkeypatch.setattr(
+        "src.llm.base.instructor",
+        SimpleNamespace(from_litellm=lambda acompletion: fake_client),
+    )
+    monkeypatch.setattr(
+        "src.llm.base.litellm", SimpleNamespace(acompletion=AsyncMock())
+    )
 
     llm = LiteLLMClient(model="gpt-test")
     result = await llm.complete(messages, response_model=StructuredAnswer)
@@ -70,7 +81,9 @@ async def test_complete_raises_llm_error_after_three_retries(
     mock_completion = AsyncMock(side_effect=RuntimeError("boom"))
     mock_sleep = AsyncMock()
 
-    monkeypatch.setattr("src.llm.base.litellm", SimpleNamespace(acompletion=mock_completion))
+    monkeypatch.setattr(
+        "src.llm.base.litellm", SimpleNamespace(acompletion=mock_completion)
+    )
     monkeypatch.setattr("src.llm.base.asyncio.sleep", mock_sleep)
 
     llm = LiteLLMClient(model="gpt-test", max_retries=3)

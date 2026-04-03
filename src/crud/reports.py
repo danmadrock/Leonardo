@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import TYPE_CHECKING
 
-from src.api.schemas import ReportRecordCreate, ReportRecordUpdate
+from sqlalchemy import select
+
 from src.models.report import ReportRecord
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from src.api.schemas import ReportRecordCreate, ReportRecordUpdate
 
 
 async def upsert_report(db: AsyncSession, payload: ReportRecordCreate) -> ReportRecord:
@@ -25,9 +30,14 @@ async def get_report(db: AsyncSession, task_id: str) -> ReportRecord | None:
     return await db.get(ReportRecord, task_id)
 
 
-async def list_reports(db: AsyncSession, limit: int = 20, offset: int = 0) -> list[ReportRecord]:
+async def list_reports(
+    db: AsyncSession, limit: int = 20, offset: int = 0
+) -> list[ReportRecord]:
     result = await db.execute(
-        select(ReportRecord).order_by(ReportRecord.created_at.desc()).limit(limit).offset(offset)
+        select(ReportRecord)
+        .order_by(ReportRecord.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     )
     return list(result.scalars().all())
 
@@ -43,6 +53,7 @@ async def update_report(
     await db.commit()
     await db.refresh(report)
     return report
+
 
 async def delete_report(db: AsyncSession, report: ReportRecord) -> None:
     await db.delete(report)
