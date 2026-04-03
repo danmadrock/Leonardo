@@ -22,7 +22,6 @@ from src.crud.tasks import create_task, get_task, get_task_by_idempotency_key
 from src.tasks.celery_app import celery_app
 from src.core.config import settings
 
-
 router = APIRouter(prefix="/api/v1/research", tags=["research"])
 
 
@@ -48,7 +47,9 @@ def _request_fingerprint(payload: ResearchCreateRequest) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-@router.post("", response_model=ResearchCreateResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "", response_model=ResearchCreateResponse, status_code=status.HTTP_202_ACCEPTED
+)
 async def create_research_task(
     payload: ResearchCreateRequest,
     request: Request,
@@ -57,17 +58,26 @@ async def create_research_task(
 ) -> ResearchCreateResponse:
     if payload.sources is not None:
         if len(payload.sources) != len(set(payload.sources)):
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Duplicate sources are not allowed")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Duplicate sources are not allowed",
+            )
         unknown = sorted(set(payload.sources) - set(settings.ENABLED_SOURCES))
         if unknown:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Unknown sources: {unknown}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Unknown sources: {unknown}",
+            )
 
     fingerprint = _request_fingerprint(payload)
     if idempotency_key:
         existing = await get_task_by_idempotency_key(db, idempotency_key)
         if existing is not None:
             if existing.request_fingerprint != fingerprint:
-                raise HTTPException(status_code=409, detail="Idempotency-Key reuse with different request payload")
+                raise HTTPException(
+                    status_code=409,
+                    detail="Idempotency-Key reuse with different request payload",
+                )
             task = existing
         else:
             task = await create_task(
@@ -105,10 +115,14 @@ async def create_research_task(
 
 
 @router.get("/{task_id}", response_model=ResearchTaskResponse)
-async def get_research_task(task_id: str, db: AsyncSession = Depends(get_db)) -> ResearchTaskResponse:  # noqa: B008
+async def get_research_task(
+    task_id: str, db: AsyncSession = Depends(get_db)
+) -> ResearchTaskResponse:  # noqa: B008
     task = await get_task(db, task_id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
 
     return ResearchTaskResponse(
         task_id=task.id,
@@ -120,10 +134,14 @@ async def get_research_task(task_id: str, db: AsyncSession = Depends(get_db)) ->
 
 
 @router.get("/{task_id}/status", response_model=ResearchStatusResponse)
-async def get_research_status(task_id: str, db: AsyncSession = Depends(get_db)) -> ResearchStatusResponse:  # noqa: B008
+async def get_research_status(
+    task_id: str, db: AsyncSession = Depends(get_db)
+) -> ResearchStatusResponse:  # noqa: B008
     task = await get_task(db, task_id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
 
     return ResearchStatusResponse(
         task_id=task.id,
@@ -151,20 +169,30 @@ async def get_research_report(
 ) -> ResearchReportResponse | Response:  # noqa: B008
     task = await get_task(db, task_id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
 
     if task.status.value == "failed":
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=task.error or "Task failed")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=task.error or "Task failed"
+        )
     if task.status.value != "completed":
-        raise HTTPException(status_code=status.HTTP_425_TOO_EARLY, detail="Report is not ready")
+        raise HTTPException(
+            status_code=status.HTTP_425_TOO_EARLY, detail="Report is not ready"
+        )
 
     report = await get_report(db, task_id)
     if report is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Report not found"
+        )
 
     accepts_markdown = "text/markdown" in request.headers.get("accept", "")
     if accepts_markdown:
-        return Response(content=report.markdown, media_type="text/markdown; charset=utf-8")
+        return Response(
+            content=report.markdown, media_type="text/markdown; charset=utf-8"
+        )
 
     return ResearchReportResponse(
         task_id=task.id,

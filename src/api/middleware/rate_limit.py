@@ -27,7 +27,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             bucket.popleft()
 
         if len(bucket) >= settings.API_RATE_LIMIT_REQUESTS:
-            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+            return JSONResponse(
+                status_code=429, content={"detail": "Rate limit exceeded"}
+            )
 
         bucket.append(now)
         return await call_next(request)

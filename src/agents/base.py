@@ -8,6 +8,7 @@ from src.llm.base import BaseLLM
 
 class BaseAgent(ABC):
     """Base interface for all research pipeline agents."""
+
     def __init__(self, llm: BaseLLM) -> None:
         self.llm = llm
 

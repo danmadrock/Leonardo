@@ -27,7 +27,9 @@ def client(db_session_factory, monkeypatch):
         async with db_session_factory() as session:
             yield session
 
-    monkeypatch.setattr("src.api.routers.research.celery_app.send_task", lambda *a, **k: None)
+    monkeypatch.setattr(
+        "src.api.routers.research.celery_app.send_task", lambda *a, **k: None
+    )
     app.dependency_overrides[get_db] = _override_get_db
     with TestClient(app) as c:
         yield c

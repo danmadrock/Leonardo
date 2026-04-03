@@ -15,9 +15,15 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("tasks", sa.Column("idempotency_key", sa.String(length=128), nullable=True))
-    op.add_column("tasks", sa.Column("request_fingerprint", sa.String(length=64), nullable=True))
-    op.create_unique_constraint("uq_tasks_idempotency_key", "tasks", ["idempotency_key"])
+    op.add_column(
+        "tasks", sa.Column("idempotency_key", sa.String(length=128), nullable=True)
+    )
+    op.add_column(
+        "tasks", sa.Column("request_fingerprint", sa.String(length=64), nullable=True)
+    )
+    op.create_unique_constraint(
+        "uq_tasks_idempotency_key", "tasks", ["idempotency_key"]
+    )
 
 
 def downgrade() -> None:

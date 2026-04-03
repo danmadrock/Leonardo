@@ -5,7 +5,6 @@ from src.agents.models import PlannerOutput
 from src.graph.state import ResearchState
 from src.llm.base import Message
 
-
 _PLANNER_SYSTEM_PROMPT = (
     "You are Leonardo's planning agent. "
     "Decompose a scientific research question into independent search subtasks. "

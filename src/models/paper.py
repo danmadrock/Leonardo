@@ -21,8 +21,12 @@ class PaperRecord(Base):
     arxiv_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     citation_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     venue: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    metadata_json: Mapped[dict] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
     )

@@ -4,4 +4,10 @@ from src.api.routers.reports import router as reports_router
 from src.api.routers.tasks import router as tasks_router
 from src.api.routers.research import router as research_router
 
-__all__ = ["health_router", "papers_router", "tasks_router", "reports_router", "research_router"]
+__all__ = [
+    "health_router",
+    "papers_router",
+    "tasks_router",
+    "reports_router",
+    "research_router",
+]

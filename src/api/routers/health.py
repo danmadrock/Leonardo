@@ -9,9 +9,11 @@ from src.db.session import SessionLocal
 
 router = APIRouter(tags=["health"])
 
+
 @router.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
 
 @router.get("/readiness")
 async def readiness() -> dict[str, str]:

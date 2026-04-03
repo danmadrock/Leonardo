@@ -19,14 +19,23 @@ async def get_task(db: AsyncSession, task_id: str) -> ResearchTask | None:
     return await db.get(ResearchTask, task_id)
 
 
-async def get_task_by_idempotency_key(db: AsyncSession, key: str) -> ResearchTask | None:
-    result = await db.execute(select(ResearchTask).where(ResearchTask.idempotency_key == key))
+async def get_task_by_idempotency_key(
+    db: AsyncSession, key: str
+) -> ResearchTask | None:
+    result = await db.execute(
+        select(ResearchTask).where(ResearchTask.idempotency_key == key)
+    )
     return result.scalars().first()
 
 
-async def list_tasks(db: AsyncSession, limit: int = 20, offset: int = 0) -> list[ResearchTask]:
+async def list_tasks(
+    db: AsyncSession, limit: int = 20, offset: int = 0
+) -> list[ResearchTask]:
     result = await db.execute(
-        select(ResearchTask).order_by(ResearchTask.created_at.desc()).limit(limit).offset(offset)
+        select(ResearchTask)
+        .order_by(ResearchTask.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     )
     return list(result.scalars().all())
 
@@ -42,6 +51,7 @@ async def update_task(
     await db.commit()
     await db.refresh(task)
     return task
+
 
 async def delete_task(db: AsyncSession, task: ResearchTask) -> None:
     await db.delete(task)

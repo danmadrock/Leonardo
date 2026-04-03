@@ -32,11 +32,15 @@ def _coerce_url(raw_url: str) -> HttpUrl | None:
 
 
 class SearchAgent(BaseAgent):
-    def __init__(self, llm, db_session_factory: Callable[[], AsyncSession] | None = None) -> None:
+    def __init__(
+        self, llm, db_session_factory: Callable[[], AsyncSession] | None = None
+    ) -> None:
         super().__init__(llm)
         self.db_session_factory = db_session_factory
 
-    async def _safe_search(self, source_name: str, query: str, max_results: int) -> list[Paper]:
+    async def _safe_search(
+        self, source_name: str, query: str, max_results: int
+    ) -> list[Paper]:
         source = get_source(source_name)
         return await asyncio.wait_for(
             source.search(query, max_results=max_results),

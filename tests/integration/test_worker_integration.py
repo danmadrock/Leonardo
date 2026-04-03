@@ -31,7 +31,9 @@ async def test_worker_executes_with_fake_graph(tmp_path, monkeypatch):
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with factory() as db:
-        task = await create_task(db, ResearchTaskCreate(query="q", selected_sources=[], max_papers=3))
+        task = await create_task(
+            db, ResearchTaskCreate(query="q", selected_sources=[], max_papers=3)
+        )
 
     monkeypatch.setattr(research_task, "SessionLocal", factory)
     monkeypatch.setattr(research_task, "build_graph", lambda: FakeGraph())
@@ -42,6 +44,9 @@ async def test_worker_executes_with_fake_graph(tmp_path, monkeypatch):
     async with factory() as db:
         refreshed = await get_task(db, task.id)
         assert refreshed is not None
-        assert refreshed.completed_at is None or refreshed.completed_at <= datetime.utcnow()
+        assert (
+            refreshed.completed_at is None
+            or refreshed.completed_at <= datetime.utcnow()
+        )
 
     await engine.dispose()

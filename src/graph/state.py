@@ -9,6 +9,7 @@ TaskStage = Literal["planning", "search", "analysis", "report", "done", "error"]
 
 class ResearchState(TypedDict):
     """Canonical state carried through the LangGraph pipeline."""
+
     task_id: str
     query: str
     requested_sources: list[str]

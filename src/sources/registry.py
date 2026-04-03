@@ -7,6 +7,7 @@ REGISTRY: dict[str, DataSource] = {
     "semantic_scholar": SemanticScholarSource(),
 }
 
+
 def get_source(name: str) -> DataSource:
     if name not in REGISTRY:
         raise ValueError(f"Unknown source: {name!r}. Available: {list(REGISTRY)}")

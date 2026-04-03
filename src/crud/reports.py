@@ -25,9 +25,14 @@ async def get_report(db: AsyncSession, task_id: str) -> ReportRecord | None:
     return await db.get(ReportRecord, task_id)
 
 
-async def list_reports(db: AsyncSession, limit: int = 20, offset: int = 0) -> list[ReportRecord]:
+async def list_reports(
+    db: AsyncSession, limit: int = 20, offset: int = 0
+) -> list[ReportRecord]:
     result = await db.execute(
-        select(ReportRecord).order_by(ReportRecord.created_at.desc()).limit(limit).offset(offset)
+        select(ReportRecord)
+        .order_by(ReportRecord.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     )
     return list(result.scalars().all())
 
@@ -43,6 +48,7 @@ async def update_report(
     await db.commit()
     await db.refresh(report)
     return report
+
 
 async def delete_report(db: AsyncSession, report: ReportRecord) -> None:
     await db.delete(report)

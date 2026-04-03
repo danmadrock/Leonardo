@@ -11,13 +11,18 @@ from src.core.exceptions import LLMError
 
 try:
     import instructor
-except ImportError:  # pragma: no cover - handled in runtime environments without instructor
+except (
+    ImportError
+):  # pragma: no cover - handled in runtime environments without instructor
     instructor = None  # type: ignore[assignment]
 
 try:
     import litellm
-except ImportError:  # pragma: no cover - handled in runtime environments without litellm
+except (
+    ImportError
+):  # pragma: no cover - handled in runtime environments without litellm
     litellm = None  # type: ignore[assignment]
+
 
 class Message(TypedDict):
     role: Literal["system", "user", "assistant", "tool"]
@@ -26,12 +31,20 @@ class Message(TypedDict):
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def complete(self, messages: list[Message], response_model: type[BaseModel] | None = None) -> str | BaseModel:
+    async def complete(
+        self, messages: list[Message], response_model: type[BaseModel] | None = None
+    ) -> str | BaseModel:
         """Run a chat completion request."""
 
 
 class LiteLLMClient(BaseLLM):
-    def __init__(self, model: str | None = None, max_retries: int = 3, retry_base_delay: float = 0.25, temperature: float = 0.0) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        max_retries: int = 3,
+        retry_base_delay: float = 0.25,
+        temperature: float = 0.0,
+    ) -> None:
         self.model = model or settings.LLM_MODEL
         self.max_retries = max_retries or settings.LLM_MAX_RETRIES
         self.retry_base_delay = retry_base_delay or settings.LLM_RETRY_BASE_DELAY
@@ -42,13 +55,17 @@ class LiteLLMClient(BaseLLM):
             raise RuntimeError("litellm is not installed")
         return await litellm.acompletion(**kwargs)
 
-    async def complete(self, messages: list[Message], response_model: type[BaseModel] | None = None) -> str | BaseModel:
+    async def complete(
+        self, messages: list[Message], response_model: type[BaseModel] | None = None
+    ) -> str | BaseModel:
         last_error: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
                 if response_model is not None:
                     if instructor is None:
-                        raise RuntimeError("instructor is required for structured outputs")
+                        raise RuntimeError(
+                            "instructor is required for structured outputs"
+                        )
                     instructor_module = instructor
                     from_litellm = cast(Any, instructor_module.from_litellm)
                     client = from_litellm(self._acompletion)
@@ -66,8 +83,8 @@ class LiteLLMClient(BaseLLM):
                         model=self.model,
                         messages=messages,
                         temperature=self.temperature,
-                        ),
-                        timeout=settings.LLM_TIMEOUT_SECONDS,
+                    ),
+                    timeout=settings.LLM_TIMEOUT_SECONDS,
                 )
                 return self._extract_text(response)
             except Exception as exc:  # noqa: BLE001

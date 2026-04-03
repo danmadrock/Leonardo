@@ -7,7 +7,6 @@ from src.db.base import Base
 from src.models import paper, report, task  # noqa: F401
 from src.core.config import get_settings
 
-
 config = context.config
 
 settings = get_settings()

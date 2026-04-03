@@ -5,7 +5,7 @@ from pydantic import SecretStr
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-    
+
     # LLM
     LLM_MODEL: str = "gpt-4o-mini"
     OPENAI_API_KEY: SecretStr | None = None
@@ -46,5 +46,6 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
 
 settings = get_settings()

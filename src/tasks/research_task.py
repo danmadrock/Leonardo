@@ -21,7 +21,9 @@ from src.tasks.celery_app import celery_app
 logger = structlog.get_logger(__name__)
 
 
-def _task_meta_payload(*, stage: str, state: ResearchState | None = None, error: str | None = None) -> dict[str, Any]:
+def _task_meta_payload(
+    *, stage: str, state: ResearchState | None = None, error: str | None = None
+) -> dict[str, Any]:
     payload: dict[str, Any] = {"stage": stage}
     if state is not None:
         payload["progress"] = {
@@ -104,7 +106,11 @@ async def persist_final_state(db: AsyncSession, state: ResearchState) -> None:
         db,
         task,
         ResearchTaskUpdate(
-            status=TaskStatus.completed if state["status"] == "completed" else TaskStatus.failed,
+            status=(
+                TaskStatus.completed
+                if state["status"] == "completed"
+                else TaskStatus.failed
+            ),
             stage=TaskStage.done if state["status"] == "completed" else TaskStage.error,
             error=state["error"],
             iterations_used=state["search_iteration"],
