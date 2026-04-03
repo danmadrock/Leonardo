@@ -34,6 +34,8 @@ class ResearchTask(Base):
     status: Mapped[TaskStatus] = mapped_column(SQLEnum(TaskStatus), default=TaskStatus.pending)
     stage: Mapped[TaskStage] = mapped_column(SQLEnum(TaskStage), default=TaskStage.planning)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True)
+    request_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     selected_sources: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     max_papers: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
