@@ -4,18 +4,21 @@ import asyncio
 from datetime import datetime
 from typing import Any, cast
 
-from sqlalchemy.ext.asyncio import AsyncSession
+import structlog
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.api.schemas import ReportRecordCreate, ResearchTaskUpdate
 from src.crud.reports import upsert_report
 from src.crud.tasks import get_task, update_task
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from src.core.logging import bind_task_context, clear_task_context
 
 from src.db.session import SessionLocal
 from src.graph.builder import build_graph
 from src.graph.state import ResearchState
 from src.models.task import TaskStage, TaskStatus
 from src.tasks.celery_app import celery_app
+
+logger = structlog.get_logger(__name__)
 
 
 def _task_meta_payload(*, stage: str, state: ResearchState | None = None, error: str | None = None) -> dict[str, Any]:
@@ -130,6 +133,8 @@ async def _execute_research_task(task_id: str, task_handle: Any) -> dict[str, An
         if task is None:
             raise ValueError(f"Task {task_id} not found")
 
+        bind_task_context(task_id)
+        logger.info("task.start")
         await mark_task_running(db, task_id)
 
         state: ResearchState = {
@@ -162,6 +167,7 @@ async def _execute_research_task(task_id: str, task_handle: Any) -> dict[str, An
                     state.update(node_state)
                     state["stage"] = cast(Any, stage_map.get(node_name, state["stage"]))
                     await persist_progress(db, state)
+                    logger.info("task.progress", stage=state["stage"])
                     task_handle.update_state(
                         state="PROGRESS",
                         meta=_task_meta_payload(stage=state["stage"], state=state),
@@ -170,15 +176,19 @@ async def _execute_research_task(task_id: str, task_handle: Any) -> dict[str, An
             state["status"] = "completed"
             state["stage"] = "done"
             await persist_final_state(db, state)
+            logger.info("task.completed")
             return {"task_id": task_id, "status": "completed"}
         except Exception as exc:  # noqa: BLE001
             error = str(exc)
             await mark_task_failed(db, task_id, error)
+            logger.exception("task.failed", error=error)
             task_handle.update_state(
                 state="FAILURE",
                 meta=_task_meta_payload(stage="error", error=error),
             )
             raise
+        finally:
+            clear_task_context()
 
 
 @celery_app.task(name="research.execute", bind=True)

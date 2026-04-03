@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+import hashlib
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.dependencies import get_db
@@ -16,8 +18,10 @@ from src.api.schemas.research import (
 )
 from src.api.schemas.tasks import ResearchTaskCreate
 from src.crud.reports import get_report
-from src.crud.tasks import create_task, get_task
+from src.crud.tasks import create_task, get_task, get_task_by_idempotency_key
 from src.tasks.celery_app import celery_app
+from src.core.config import settings
+
 
 router = APIRouter(prefix="/api/v1/research", tags=["research"])
 
@@ -39,31 +43,61 @@ def _stage_for_api(status_value: str, stage_value: str) -> PipelineStage:
     return mapping.get(stage_value, PipelineStage.queued)
 
 
+def _request_fingerprint(payload: ResearchCreateRequest) -> str:
+    canonical = f"{payload.query.strip()}|{payload.max_papers}|{','.join(sorted(payload.sources or []))}"
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 @router.post("", response_model=ResearchCreateResponse, status_code=status.HTTP_202_ACCEPTED)
 async def create_research_task(
     payload: ResearchCreateRequest,
     request: Request,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> ResearchCreateResponse:
-    if payload.sources is not None and len(payload.sources) != len(set(payload.sources)):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Duplicate sources are not allowed")
+    if payload.sources is not None:
+        if len(payload.sources) != len(set(payload.sources)):
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Duplicate sources are not allowed")
+        unknown = sorted(set(payload.sources) - set(settings.ENABLED_SOURCES))
+        if unknown:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Unknown sources: {unknown}")
 
-    task = await create_task(
-        db,
-        ResearchTaskCreate(
-            query=payload.query,
-            selected_sources=payload.sources or [],
-            max_papers=payload.max_papers,
-        ),
-    )
-
-    celery_app.send_task("research.execute", args=[task.id])
+    fingerprint = _request_fingerprint(payload)
+    if idempotency_key:
+        existing = await get_task_by_idempotency_key(db, idempotency_key)
+        if existing is not None:
+            if existing.request_fingerprint != fingerprint:
+                raise HTTPException(status_code=409, detail="Idempotency-Key reuse with different request payload")
+            task = existing
+        else:
+            task = await create_task(
+                db,
+                ResearchTaskCreate(
+                    query=payload.query,
+                    selected_sources=payload.sources or [],
+                    max_papers=payload.max_papers,
+                    idempotency_key=idempotency_key,
+                    request_fingerprint=fingerprint,
+                ),
+            )
+            celery_app.send_task("research.execute", args=[task.id])
+    else:
+        task = await create_task(
+            db,
+            ResearchTaskCreate(
+                query=payload.query,
+                selected_sources=payload.sources or [],
+                max_papers=payload.max_papers,
+                request_fingerprint=fingerprint,
+            ),
+        )
+        celery_app.send_task("research.execute", args=[task.id])
 
     base = str(request.base_url).rstrip("/")
     return ResearchCreateResponse(
         task_id=task.id,
-        status=TaskStatus.pending,
-        stage=PipelineStage.queued,
+        status=TaskStatus(task.status.value),
+        stage=_stage_for_api(task.status.value, task.stage.value),
         status_url=f"{base}/api/v1/research/{task.id}/status",
         report_url=f"{base}/api/v1/research/{task.id}/report",
         created_at=task.created_at,
@@ -109,7 +143,7 @@ async def get_research_status(task_id: str, db: AsyncSession = Depends(get_db)) 
     )
 
 
-@router.get("/{task_id}/report")
+@router.get("/{task_id}/report", response_model=None)
 async def get_research_report(
     task_id: str,
     request: Request,

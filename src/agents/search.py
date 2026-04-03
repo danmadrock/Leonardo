@@ -36,6 +36,13 @@ class SearchAgent(BaseAgent):
         super().__init__(llm)
         self.db_session_factory = db_session_factory
 
+    async def _safe_search(self, source_name: str, query: str, max_results: int) -> list[Paper]:
+        source = get_source(source_name)
+        return await asyncio.wait_for(
+            source.search(query, max_results=max_results),
+            timeout=settings.SOURCE_TIMEOUT_SECONDS,
+        )
+
     async def run(self, state: ResearchState) -> dict:
         enabled_sources = state.get("requested_sources") or settings.ENABLED_SOURCES
         per_subtask_limit = min(
@@ -45,8 +52,7 @@ class SearchAgent(BaseAgent):
         jobs: list[Awaitable[list[Paper]]] = []
         for subtask in state["subtasks"]:
             for source_name in enabled_sources:
-                source = get_source(source_name)
-                jobs.append(source.search(subtask, max_results=per_subtask_limit))
+                jobs.append(self._safe_search(source_name, subtask, per_subtask_limit))
         batches = await asyncio.gather(*jobs, return_exceptions=True)
         seen: set[tuple[str, str, str]] = set()
         deduped: list[Paper] = []

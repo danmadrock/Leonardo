@@ -33,8 +33,8 @@ class BaseLLM(ABC):
 class LiteLLMClient(BaseLLM):
     def __init__(self, model: str | None = None, max_retries: int = 3, retry_base_delay: float = 0.25, temperature: float = 0.0) -> None:
         self.model = model or settings.LLM_MODEL
-        self.max_retries = max_retries
-        self.retry_base_delay = retry_base_delay
+        self.max_retries = max_retries or settings.LLM_MAX_RETRIES
+        self.retry_base_delay = retry_base_delay or settings.LLM_RETRY_BASE_DELAY
         self.temperature = temperature
 
     async def _acompletion(self, **kwargs: Any) -> Any:
@@ -52,23 +52,33 @@ class LiteLLMClient(BaseLLM):
                     instructor_module = instructor
                     from_litellm = cast(Any, instructor_module.from_litellm)
                     client = from_litellm(self._acompletion)
-                    return await client.chat.completions.create(
+                    return await asyncio.wait_for(
+                        client.chat.completions.create(
+                            model=self.model,
+                            messages=messages,
+                            temperature=self.temperature,
+                            response_model=response_model,
+                        ),
+                        timeout=settings.LLM_TIMEOUT_SECONDS,
+                    )
+                response = await asyncio.wait_for(
+                    self._acompletion(
                         model=self.model,
                         messages=messages,
                         temperature=self.temperature,
-                        response_model=response_model,
-                    )
-                response = await self._acompletion(
-                    model=self.model,
-                    messages=messages,
-                    temperature=self.temperature,
+                        ),
+                        timeout=settings.LLM_TIMEOUT_SECONDS,
                 )
                 return self._extract_text(response)
-            except Exception as exc:  # noqa: BLE001 - normalize all provider errors to LLMError
+            except Exception as exc:  # noqa: BLE001
                 last_error = exc
                 if attempt >= self.max_retries:
                     break
-                await asyncio.sleep(self.retry_base_delay * (2 ** (attempt - 1)))
+                delay = self.retry_base_delay * (2 ** (attempt - 1))
+                message = str(exc).lower()
+                if "rate" in message and "limit" in message:
+                    delay = max(delay, 2.0)
+                await asyncio.sleep(delay)
         raise LLMError(
             f"LLM completion failed after {self.max_retries} retries for model {self.model}"
         ) from last_error

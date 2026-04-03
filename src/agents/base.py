@@ -14,3 +14,4 @@ class BaseAgent(ABC):
     @abstractmethod
     async def run(self, state: ResearchState) -> dict:
         """Return a partial state update for the orchestrator merge step."""
+        ...
