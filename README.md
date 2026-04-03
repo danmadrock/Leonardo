@@ -9,7 +9,7 @@
 ██║     ██╔══╝  ██║   ██║██║╚██╗██║██╔══██║██╔══██╗██║  ██║██║   ██║
 ███████╗███████╗╚██████╔╝██║ ╚████║██║  ██║██║  ██║██████╔╝╚██████╔╝
 ╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝  ╚═════╝
-                         R E S E A R C H
+                    R E S E A R C H
 ```
 
 **Autonomous multi-agent system for scientific literature research**
@@ -33,9 +33,9 @@ The system decomposes complex research queries into subtasks, searches multiple 
 
 ```
 User query  ──▶  Planner  ──▶  Search  ──▶  Analysis  ──▶  Report
-                   │              │              │              │
-              subtask list    raw papers     findings +     structured
-                                           citations       Markdown
+                   │              │             │            │
+              subtask list    raw papers    findings +    structured
+                                            citations      Markdown
 ```
 
 ---
@@ -107,9 +107,9 @@ The following diagram shows the full component topology, from the HTTP layer dow
 Each node receives the shared `ResearchState` and returns a partial update. The conditional edge between Search and Analysis enables iterative deepening:
 
 ```
-START
-  │
-  ▼
+                       START
+                         │
+                         ▼
 ┌─────────────────────────────────────────────────────────┐
 │  Planner node                                           │
 │  in:  query                                             │
@@ -131,7 +131,7 @@ START
 ┌─────────────────────────────────────────────────────────┐
 │  Analysis node                                          │
 │  in:  state.papers[ ]                                   │
-│  out: state.findings[ ]  (claim · method · relevance)  │
+│  out: state.findings[ ]  (claim · method · relevance)   │
 └────────────────────────┬────────────────────────────────┘
                          │
                          ▼
@@ -170,6 +170,7 @@ leonardo-research/
 │   │   ├── base.py                # DataSource ABC
 │   │   ├── arxiv.py
 │   │   ├── semantic_scholar.py
+│   │   ├── models.py
 │   │   └── registry.py            # Source loader / registry
 │   │
 │   ├── api/                       # FastAPI application
@@ -189,6 +190,7 @@ leonardo-research/
 │   ├── models/                    # SQLAlchemy ORM models
 │   │   ├── task.py
 │   │   └── report.py
+│   │   └── paper.py
 │   │
 │   ├── llm/                       # LLM provider abstraction (LiteLLM)
 │   │   ├── base.py
@@ -210,20 +212,24 @@ leonardo-research/
 │   ├── Dockerfile.worker          # Celery worker image
 │   └── docker-compose.yml         # Full stack: API, worker, pg, redis, chroma
 │
-├── alembic/                       # Database migrations
+├── migrations/                       # Database migrations
+│   ├── env.py
+│   ├── script.py.mako
 │   └── versions/
-│
-├── scripts/
-│   ├── seed_db.py
-│   └── run_dev.sh
 │
 ├── docs/
 │   ├── architecture.md
-│   └── adding_sources.md          # Guide: implement a new DataSource plugin
+│   ├── adding_sources.md          # Guide: implement a new DataSource plugin
+|   ├–– api.md
+|   ├–– implementation_plan.md
+|   ├–– migrations.md
 │
 ├── .env.example
 ├── pyproject.toml                 # uv / poetry — pinned deps
 ├── Makefile                       # make dev · test · lint · docker-up
+├── LICENCE
+├── alembic.ini
+├── .gitignore
 └── README.md
 ```
 
@@ -251,7 +257,7 @@ leonardo-research/
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - Docker and Docker Compose
 - An OpenAI API key (or a running Ollama instance for local inference)
 
@@ -272,7 +278,7 @@ LLM_MODEL=gpt-4o
 OPENAI_API_KEY=sk-...
 
 # Database
-DATABASE_URL=postgresql+asyncpg://leonardo:secret@localhost:5432/leonardo
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
 REDIS_URL=redis://localhost:6379/0
 
 # Pipeline tuning

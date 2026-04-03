@@ -33,7 +33,7 @@ class SemanticScholarSource(DataSource):
         self._min_interval = 1.0
         self._rate_lock = asyncio.Lock()
 
-    async def _rate_limit(self):
+    async def _rate_limit(self) -> None:
         async with self._rate_lock:
             now = time.time()
             delta = now - self._last_request
@@ -120,5 +120,5 @@ class SemanticScholarSource(DataSource):
             metadata={"paper_id": record.get("paperId")},
         )
 
-    async def close(self):
+    async def close(self) -> None:
         await self._client.aclose()
