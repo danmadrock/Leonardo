@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from src.core.config import settings
-from src.graph.state import ResearchState
+
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
 
 MIN_FINDINGS_THRESHOLD = 3
 

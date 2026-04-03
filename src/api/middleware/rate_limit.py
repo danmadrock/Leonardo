@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import time
 from collections import defaultdict, deque
+from typing import TYPE_CHECKING
 
-from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from src.core.config import settings
+
+if TYPE_CHECKING:
+    from fastapi import Request
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):

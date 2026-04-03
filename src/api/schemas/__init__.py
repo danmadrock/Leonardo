@@ -4,11 +4,6 @@ from src.api.schemas.reports import (
     ReportRecordRead,
     ReportRecordUpdate,
 )
-from src.api.schemas.tasks import (
-    ResearchTaskCreate,
-    ResearchTaskRead,
-    ResearchTaskUpdate,
-)
 from src.api.schemas.research import (
     PipelineStage,
     ProgressSnapshot,
@@ -18,6 +13,11 @@ from src.api.schemas.research import (
     ResearchStatusResponse,
     ResearchTaskResponse,
     TaskStatus,
+)
+from src.api.schemas.tasks import (
+    ResearchTaskCreate,
+    ResearchTaskRead,
+    ResearchTaskUpdate,
 )
 
 __all__ = [

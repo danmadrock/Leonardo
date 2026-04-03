@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from datetime import datetime
-from enum import Enum
+from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    from datetime import datetime
 
-class PipelineStage(str, Enum):
+
+class PipelineStage(StrEnum):
     queued = "queued"
     planner = "planner"
     search = "search"
@@ -16,7 +19,7 @@ class PipelineStage(str, Enum):
     failed = "failed"
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     pending = "pending"
     running = "running"
     completed = "completed"

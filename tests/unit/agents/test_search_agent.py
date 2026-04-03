@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from typing import TYPE_CHECKING
 
 from src.agents.search import SearchAgent
-from src.graph.state import ResearchState
 from src.llm.base import BaseLLM, Message
 from src.sources.models import Paper
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+
+    from src.graph.state import ResearchState
 
 
 class FakeLLM(BaseLLM):

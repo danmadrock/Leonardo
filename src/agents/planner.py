@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from src.agents.base import BaseAgent
 from src.agents.models import PlannerOutput
-from src.graph.state import ResearchState
-from src.llm.base import Message
+
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
+    from src.llm.base import Message
 
 _PLANNER_SYSTEM_PROMPT = (
     "You are Leonardo's planning agent. "

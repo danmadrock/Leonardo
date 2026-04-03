@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
-from src.graph.state import ResearchState
-from src.llm.base import BaseLLM
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
+    from src.llm.base import BaseLLM
 
 
 class BaseAgent(ABC):

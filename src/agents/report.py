@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from src.agents.base import BaseAgent
 from src.agents.models import Finding, Report, ReportBody
-from src.graph.state import ResearchState
-from src.llm.base import Message
-from src.sources.models import PaperRef
+
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
+    from src.llm.base import Message
+    from src.sources.models import PaperRef
 
 
 class ReportAgent(BaseAgent):

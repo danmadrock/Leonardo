@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+
 from src.api.middleware.rate_limit import RateLimitMiddleware
 from src.api.routers import (
     health_router,
@@ -7,8 +8,8 @@ from src.api.routers import (
     research_router,
     tasks_router,
 )
-from src.core.logging import configure_logging
 from src.core.config import settings
+from src.core.logging import configure_logging
 
 configure_logging(settings.LOG_LEVEL)
 

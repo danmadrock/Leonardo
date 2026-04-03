@@ -1,7 +1,10 @@
 from __future__ import annotations
-from typing import Literal, TypedDict
-from src.agents.models import Finding, Report
-from src.sources.models import Paper
+
+from typing import TYPE_CHECKING, Literal, TypedDict
+
+if TYPE_CHECKING:
+    from src.agents.models import Finding, Report
+    from src.sources.models import Paper
 
 ResearchStatus = Literal["pending", "running", "completed", "failed"]
 TaskStage = Literal["planning", "search", "analysis", "report", "done", "error"]

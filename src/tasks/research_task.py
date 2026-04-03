@@ -2,21 +2,23 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import structlog
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.api.schemas import ReportRecordCreate, ResearchTaskUpdate
+from src.core.logging import bind_task_context, clear_task_context
 from src.crud.reports import upsert_report
 from src.crud.tasks import get_task, update_task
-from src.core.logging import bind_task_context, clear_task_context
-
 from src.db.session import SessionLocal
 from src.graph.builder import build_graph
-from src.graph.state import ResearchState
 from src.models.task import TaskStage, TaskStatus
 from src.tasks.celery_app import celery_app
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+    from src.graph.state import ResearchState
 
 logger = structlog.get_logger(__name__)
 
@@ -171,7 +173,7 @@ async def _execute_research_task(task_id: str, task_handle: Any) -> dict[str, An
                         "report": "report",
                     }
                     state.update(node_state)
-                    state["stage"] = cast(Any, stage_map.get(node_name, state["stage"]))
+                    state["stage"] = cast("Any", stage_map.get(node_name, state["stage"]))
                     await persist_progress(db, state)
                     logger.info("task.progress", stage=state["stage"])
                     task_handle.update_state(

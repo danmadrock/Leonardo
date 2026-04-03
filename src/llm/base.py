@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Literal, TypedDict, cast
-
-from pydantic import BaseModel
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from src.core.config import settings
 from src.core.exceptions import LLMError
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
 
 try:
     import instructor
@@ -67,7 +68,7 @@ class LiteLLMClient(BaseLLM):
                             "instructor is required for structured outputs"
                         )
                     instructor_module = instructor
-                    from_litellm = cast(Any, instructor_module.from_litellm)
+                    from_litellm = cast("Any", instructor_module.from_litellm)
                     client = from_litellm(self._acompletion)
                     return await asyncio.wait_for(
                         client.chat.completions.create(

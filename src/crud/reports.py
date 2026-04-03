@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import TYPE_CHECKING
 
-from src.api.schemas import ReportRecordCreate, ReportRecordUpdate
+from sqlalchemy import select
+
 from src.models.report import ReportRecord
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from src.api.schemas import ReportRecordCreate, ReportRecordUpdate
 
 
 async def upsert_report(db: AsyncSession, payload: ReportRecordCreate) -> ReportRecord:

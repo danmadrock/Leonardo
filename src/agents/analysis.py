@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from src.agents.base import BaseAgent
 from src.agents.models import Finding
 from src.core.config import settings
-from src.graph.state import ResearchState
-from src.llm.base import Message
 from src.sources.models import Paper, PaperRef
+
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
+    from src.llm.base import Message
 
 _ANALYSIS_SYSTEM_PROMPT = (
     "You are Leonardo's scientific analysis agent. "

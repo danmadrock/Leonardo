@@ -1,18 +1,23 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from pydantic import HttpUrl, TypeAdapter, ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agents.base import BaseAgent
 from src.api.schemas import PaperCreate
 from src.core.config import settings
 from src.crud.papers import create_paper_if_missing
-from src.graph.state import ResearchState
-from src.sources.models import Paper
 from src.sources.registry import get_source
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from src.graph.state import ResearchState
+    from src.sources.models import Paper
 
 _HTTP_URL_ADAPTER = TypeAdapter(HttpUrl)
 

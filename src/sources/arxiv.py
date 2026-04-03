@@ -1,7 +1,9 @@
 import asyncio
 import logging
 from typing import ClassVar
+
 import arxiv
+
 from src.sources.base import DataSource
 from src.sources.models import Paper
 

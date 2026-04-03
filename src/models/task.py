@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from sqlalchemy import JSON, DateTime, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
@@ -11,14 +11,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from src.db.base import Base
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     pending = "pending"
     running = "running"
     completed = "completed"
     failed = "failed"
 
 
-class TaskStage(str, Enum):
+class TaskStage(StrEnum):
     planning = "planning"
     search = "search"
     analysis = "analysis"

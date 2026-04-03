@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import TYPE_CHECKING
 
-from src.api.schemas import ResearchTaskCreate, ResearchTaskUpdate
+from sqlalchemy import select
+
 from src.models.task import ResearchTask
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from src.api.schemas import ResearchTaskCreate, ResearchTaskUpdate
 
 
 async def create_task(db: AsyncSession, payload: ResearchTaskCreate) -> ResearchTask:

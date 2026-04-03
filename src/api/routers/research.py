@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.dependencies import get_db
 from src.api.schemas.research import (
@@ -17,10 +17,13 @@ from src.api.schemas.research import (
     TaskStatus,
 )
 from src.api.schemas.tasks import ResearchTaskCreate
+from src.core.config import settings
 from src.crud.reports import get_report
 from src.crud.tasks import create_task, get_task, get_task_by_idempotency_key
 from src.tasks.celery_app import celery_app
-from src.core.config import settings
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/research", tags=["research"])
 
@@ -43,7 +46,12 @@ def _stage_for_api(status_value: str, stage_value: str) -> PipelineStage:
 
 
 def _request_fingerprint(payload: ResearchCreateRequest) -> str:
-    canonical = f"{payload.query.strip()}|{payload.max_papers}|{','.join(sorted(payload.sources or []))}"
+    canonical = f"{
+        payload.query.strip()}|{
+            payload.max_papers
+            }|{
+                ','.join(sorted(payload.sources or []))
+                }"
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 

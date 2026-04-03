@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from src.graph.edges import route_after_analysis
-from src.graph.state import ResearchState
+
+if TYPE_CHECKING:
+    from src.graph.state import ResearchState
 
 
 def test_route_loops_when_findings_too_low() -> None:

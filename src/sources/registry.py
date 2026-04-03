@@ -1,5 +1,5 @@
-from src.sources.base import DataSource
 from src.sources.arxiv import ArXivSource
+from src.sources.base import DataSource
 from src.sources.semantic_scholar import SemanticScholarSource
 
 REGISTRY: dict[str, DataSource] = {
